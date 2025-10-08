@@ -17,6 +17,7 @@ type WebSocketState = {
     timestamp: Date;
   }[];
   ws: WebSocket | null;
+  can_bus_state: number;
   connect: () => void;
   disconnect: () => void;
 };
@@ -26,13 +27,13 @@ export const useSocketStore = create<WebSocketState>((set, get) => ({
   logs: [],
   alarms: [],
   latencies: [],
+  can_bus_state: -1,
   ws: null,
 
   connect: () => {
     if (get().ws) return;
 
     const ws = new WebSocket("wss://shore.stevenseboat.org/api");
-    // const ws = new WebSocket("wss://eboat.thiagoja.com/api");
     // const ws = new WebSocket("ws://localhost:5001/api");
 
     // send a ping object every 3 seconds (include timestamp so server can pong back)
@@ -124,6 +125,12 @@ export const useSocketStore = create<WebSocketState>((set, get) => ({
         }));
         console.log(JSON.stringify(parsedAgain));
         set((state) => ({ logs: [...parsedAgain, ...state.logs] }));
+      }
+      
+      if(type === "can_bus") {
+        set((state) => ({
+          can_bus_state: parsed.state,
+        }));
       }
     };
 
